@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <pthread.h>
 #include "temp_task.c"
+#include "../Includes/light_task.h"
+#include "light_task.c"
 
 pthread_t temp_id, light_id, socket_id;
 
@@ -14,6 +16,8 @@ void *func_temp()
 		while(1)
 		{
 			read_temp_data_reg();
+			long long i;
+			for(i = 0;i<1000000000;i++);
 		}
 	printf("Temperature Thread Finished\n");
 }
@@ -22,6 +26,16 @@ void *func_light()
 {
 	printf("Light Thread Started\n");
 	//while(1);
+	int x;
+	x = light_init();
+	while(1)
+	{
+		float lumen = get_lux(x);
+		printf("The current lux is %f\n", lumen);  
+		long long i;
+		for(i = 0;i<100000000;i++);
+
+	}
 	printf("Light Thread Finished\n");
 }
 

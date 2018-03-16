@@ -29,7 +29,7 @@ int id_reg_rd(int fd);
 uint16_t data0_reg_rd(int fd);
 uint16_t data1_reg_rd(int fd);
 float get_lux(int fd);
-int light_init(int number);
+int light_init(void);
 
 
 #endif 

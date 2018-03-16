@@ -13,7 +13,7 @@
 #include <float.h>
 #include <complex.h>
 #include <stdint.h>
-#include "lightfunc.h"
+#include "../Includes/light_task.h"
 #include <time.h>
 
 int control_reg_wr ( int fd, int msg)
@@ -306,12 +306,12 @@ uint16_t data1_reg_rd(int fd){
 	return final;
 }
 
-int light_init(int number)
+int light_init(void)
 {
 	int file;
-	char myfile[20];
+//	char myfile[20];
 
-	snprintf(myfile, 18, "/dev/i2c-%d", number);
+	char *myfile = "/dev/i2c-2";
 	file = open(myfile, O_RDWR);
 	if (file < 0)
 	 {
@@ -361,7 +361,7 @@ float get_lux(int fd)
 
 return -1;
 }
-
+/*
 int main()
 {int file;
 file = light_init(2);
@@ -376,3 +376,4 @@ printf("The current lux is %f\n", lumen);
 }
 return 0;
 }
+*/
