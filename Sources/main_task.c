@@ -39,7 +39,7 @@ char *filename;
 
 void *func_light()
 {       mqd_t mq1;
-        printf("Light Thread Started\n");
+        printf("[Light Thread] Light Thread Started\n");
         mystruct lightmsg;
         time_t curtime;
         int x = light_init();
@@ -77,7 +77,7 @@ void *func_light()
                 lightmsg.data = 1;
 		mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
 
-                printf("The current lux is %f\n", lumen);
+                //printf("The current lux is %f\n", lumen);
                 memcpy(lightmsg.timestamp,ctime(&curtime), strlen(ctime(&curtime)));
                 lightmsg.data = 0;
                 lightmsg.value = lumen; 
@@ -100,7 +100,7 @@ void *func_light()
         }
 
 
-        printf("Light Thread Finished\n");
+        printf("[Light Thread] Light Thread Finished\n");
 	time(&curtime);
         memcpy(lightmsg.random_string,"Light task finished",19);
         memcpy(lightmsg.timestamp,ctime(&curtime),24);
@@ -115,7 +115,7 @@ void *func_light()
 void *func_temp()
 {
         mqd_t mq1;
-        printf("Temperature Thread Started\n");
+        printf("[Temperature Thread] Temperature Thread Started\n");
         mystruct tempmsg;
         time_t curtime;
         char buffer[50] = {0};
@@ -133,7 +133,7 @@ void *func_temp()
 		while(1)
                 {
                         time(&curtime);
-                        float temp = read_temp_data_reg();
+                        float temp = read_temp_data_reg(0);
 			memcpy(tempmsg.random_string,"Temperature data obtained",25);
 			memcpy(tempmsg.timestamp,ctime(&curtime),24);
                         tempmsg.source_id = 2;
@@ -172,7 +172,7 @@ void *func_temp()
         tempmsg.data = 1;
 	mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
         
-        printf("Temperature Thread Finished\n");
+        printf("[Temperature Thread] Temperature Thread Finished\n");
 
 }
 
@@ -189,7 +189,7 @@ void* logger_task(void *arg)
         pact = malloc(sizeof(struct mq_attr));
         mq_getattr(my_queue,pact);
         fprintf(fptr,"Message queue initialised\n");
-        printf("Message queue initialised.\n");
+        printf("[Logger Thread] Message queue initialised.\n");
         fclose(fptr);
 while(1)
 {
@@ -250,16 +250,16 @@ while(1)
         fclose(fptr);
 
 }
-        printf("Terminating message queue\n");
+        printf("[Logger Thread] Terminating message queue\n");
         return fptr;
 }
 
 
 void* func_socket()
 {
-  printf("Socket Task Started\n");
+  printf("[Socket Thread] Socket Task Started\n");
   socket_task();
-  printf("Socket Task Finished\n");
+  printf("[Socket Thread] Socket Task Finished\n");
 }
 
 int main()
