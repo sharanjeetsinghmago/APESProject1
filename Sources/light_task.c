@@ -13,7 +13,7 @@
 #include <float.h>
 #include <complex.h>
 #include <stdint.h>
-#include "../Includes/light_task.h"
+#include "light_task.h"
 #include <time.h>
 
 int control_reg_wr ( int fd, int msg)
@@ -315,14 +315,14 @@ int light_init(void)
 	file = open(myfile, O_RDWR);
 	if (file < 0)
 	 {
-		printf("Unable to open the i2c file.\n");
+		perror("Unable to open the i2c file.\n");
 		return -1;
 	}
 	int addr = 0x39; //The I2C slave address
 
 	if (ioctl(file, I2C_SLAVE, addr) < 0)
 	 {
-		printf("Unable to use ioctl call.\n");
+		perror("Unable to use ioctl call.\n");
 		return -1;
 	}
 	return file;
@@ -333,8 +333,14 @@ float get_lux(int fd)
 	float ch_0 = 0, ch_1 = 0;
 	float adc,lux;
 
-	control_reg_wr(fd, 0x03); //to power up the sensor
-	timing_reg_wr(fd, time_high|gain);
+	if(control_reg_wr(fd, 0x03) < 0) //to power up the sensor
+	{
+          return -1;
+        }
+        if(timing_reg_wr(fd, time_high|gain) < 0)
+        {
+	 return -1;
+	}
 
 	usleep(5000);
 

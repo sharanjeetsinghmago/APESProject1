@@ -46,7 +46,7 @@ void write_pointer_reg(uint8_t value)
   }
 }
 
-void read_temp_data_reg(void)
+float read_temp_data_reg(void)
 {
 
   write_pointer_reg(0b00000000);
@@ -75,6 +75,7 @@ void read_temp_data_reg(void)
     f = (1.8 * c) + 32;
 
     printf("Temp Fahrenheit: %f Celsius: %f\n", f, c);
+    return c;
   }
 
 }
