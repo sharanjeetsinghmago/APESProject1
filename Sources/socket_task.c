@@ -105,24 +105,24 @@ while(1)
   if(strcmp(ploadptr->buf,"get_temp_celcius")==0)
   {
   	printf("You Want Temperature in Celcius\n");
-    temp = read_temp_data_reg();
-    printf("Temp in cel %f\n",temp );
+    temp = read_temp_data_reg(0);
+    //printf("Temp in cel %f\n",temp );
     snprintf(ackbuf, 50, "Temp in celcius %f",temp);
     send(accepted_soc , ackbuf , 50, 0);
   }
   else if(strcmp(ploadptr->buf,"get_temp_kelvin")==0)
   {
   	printf("You Want Temperature in Kelvin\n");
-    temp = read_temp_data_reg();
-    printf("Temp in cel %f\n",temp );
+    temp = read_temp_data_reg(1);
+    //printf("Temp in cel %f\n",temp );
     snprintf(ackbuf, 50, "Temp in kelvin  %f",temp);
     send(accepted_soc , ackbuf , 50, 0);
   }
   else if(strcmp(ploadptr->buf,"get_temp_fahrenheit")==0)
   {
   	printf("You Want Temperature in Fahrenheit\n");
-    temp = read_temp_data_reg();
-    printf("Temp in cel %f\n",temp );
+    temp = read_temp_data_reg(2);
+    //printf("Temp in cel %f\n",temp );
     snprintf(ackbuf, 50, "Temp in celcius %f",temp);
     send(accepted_soc , ackbuf , 50, 0);
   }
@@ -157,12 +157,13 @@ while(1)
     printf("You want the lumen value!!\n");
     lumen = get_lux();
     printf("Lux value %f\n",lumen );
-    snprintf(ackbuf, 50, "Lux Value is%f",lumen);
+    snprintf(ackbuf, 50, "Lux Value is %f",lumen);
     send(accepted_soc , ackbuf , 50, 0);
 
   }else
   {
-  	printf("I Don't Understand What you mean !!");
+  	printf("I Don't Understand !!");
+    send(accepted_soc , "I Don't Understand !!" , 50, 0);
   }
 
   /* send message from server to client */
