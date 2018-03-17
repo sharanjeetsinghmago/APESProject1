@@ -122,48 +122,58 @@ return -1;
 return temp;
 }
 
-int threshold_int_reg_wr(int fd, int *array){
+int threshold_int_reg_wr(int fd, int *array)
 
+{
 	int temp = 0x82;                              //for threshold low-low to threshold high-high
-	if( write(fd, &temp, 1) != 1){
+	if( write(fd, &temp, 1) != 1)
+         {
 		printf("Unable to write to threshhold interrupt register\n");
 		return -1;
 	}
 	temp = array[0];
-	if( write(fd, &temp, 1) != 1){
+	if( write(fd, &temp, 1) != 1)
+     	{
 		printf("Unable to write to threshhold interrupt register\n");
 		return -1;
 	}
 
 	temp = 0x83;
-	if( write(fd, &temp, 1) != 1){
+	if( write(fd, &temp, 1) != 1)
+	{
 		printf("Unable to write to threshhold interrupt register\n");
 		return -1;
 	}
 	temp = array[1];
-	if( write(fd, &temp, 1) != 1){
-		printf("Unable to write to threshhold interrupt register\n");
-		return -1;
+	if( write(fd, &temp, 1) != 1)
+	{
+	printf("Unable to write to threshhold interrupt register\n");
+        return -1;
 	}
 
 	temp = 0x84;
-	if( write(fd, &temp, 1) != 1){
+	if( write(fd, &temp, 1) != 1)
+	{
 		printf("Unable write to threshhold interrupt register\n");
 		return -1;
 	}
-	temp = array[2];{
+	temp = array[2];
+
 	if( write(fd, &temp, 1) != 1)
+	{
 		printf("Unable to write to threshhold interrupt register\n");
 		return -1;
 	}
 	
 	temp = 0x85;
-	if( write(fd, &temp, 1) != 1){
+	if( write(fd, &temp, 1) != 1)
+	{
 		printf("Unable to write to threshhold interrupt register\n");
 		return -1;
 	}
 	temp = array[3];
-	if( write(fd, &temp, 1) != 1){
+	if( write(fd, &temp, 1) != 1)
+	{
 		printf("Unable to write to threshhold interrupt register\n");
 		return -1;
 	}
@@ -235,7 +245,7 @@ int id_reg_rd(int fd)
 		return -1;
 	}
 
-	return temp;
+	return 0;
 }
 
 uint16_t data0_reg_rd(int fd){
@@ -308,6 +318,52 @@ uint16_t data1_reg_rd(int fd){
 	return final;
 }
 
+int all_reg_rd_wr(int fd)
+
+        {
+	int out;
+	out = control_reg_wr(fd, 0x03);
+	if( out ==  -1 )
+		return -1;
+
+	out = control_reg_rd(fd);
+	if( out ==  -1 )
+		return -1;
+	out = timing_reg_wr(fd, 0x12);
+	if( out ==  -1 )
+		return -1;
+	out = timing_reg_rd(fd);
+	if( out ==  -1 )
+		return -1;
+	/*Interrupt threshhold register reads 4 bytes*/
+
+	int array[4] = {0, 0, 0, 0};
+
+	out = threshold_int_reg_rd(fd, array);
+	if( out ==  -1 )
+	return -1;
+        
+        int arr[1] = {0x0F};
+	out = threshold_int_reg_wr(fd, arr);
+	if( out ==  -1 )
+		return -1;
+
+	out = id_reg_rd(fd);
+	if( out ==  -1 )
+		return -1;
+
+	out = data0_reg_rd(fd);
+	if( out ==  -1 )
+		return -1;
+
+	out = data1_reg_rd(fd);
+	if( out ==  -1 )
+		return -1;
+
+	return 0;
+
+}
+
 int light_init(void)
 {
 	int file;
@@ -345,7 +401,7 @@ float get_lux()
 	 return -1;
 	}
 
-	usleep(5000);
+	//usleep(5000);
 
 	ch_0 = (float)data0_reg_rd(a);
 	ch_1 = (float)data1_reg_rd(a);

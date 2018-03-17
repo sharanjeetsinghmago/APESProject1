@@ -30,6 +30,6 @@ uint16_t data0_reg_rd(int fd);
 uint16_t data1_reg_rd(int fd);
 float get_lux(	);
 int light_init(void);
-
+int all_reg_rd_wr(int fd);
 
 #endif 
