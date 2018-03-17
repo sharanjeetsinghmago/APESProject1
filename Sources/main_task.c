@@ -17,7 +17,7 @@ void *func_temp()
 		{
 			read_temp_data_reg();
 			long long i;
-			for(i = 0;i<1000000000;i++);
+			for(i = 0;i<100000000;i++);
 		}
 	printf("Temperature Thread Finished\n");
 }
