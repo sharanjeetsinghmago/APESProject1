@@ -53,7 +53,7 @@ float read_temp_data_reg(void)
 
   int x = read(fd,&buf,2);
 
-  printf("number of bytes read = %d\n",x);
+  //printf("number of bytes read = %d\n",x);
 
   if (x != 2) 
   {
@@ -74,7 +74,7 @@ float read_temp_data_reg(void)
     c = temp*0.0625;
     f = (1.8 * c) + 32;
 
-    printf("Temp Fahrenheit: %f Celsius: %f\n", f, c);
+    //printf("Temp Fahrenheit: %f Celsius: %f\n", f, c);
     return c;
   }
 

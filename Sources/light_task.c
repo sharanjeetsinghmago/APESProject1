@@ -13,8 +13,10 @@
 #include <float.h>
 #include <complex.h>
 #include <stdint.h>
-#include "light_task.h"
+#include "../Includes/light_task.h"
 #include <time.h>
+
+int a;
 
 int control_reg_wr ( int fd, int msg)
 {
@@ -325,27 +327,28 @@ int light_init(void)
 		perror("Unable to use ioctl call.\n");
 		return -1;
 	}
+	a=file;
 	return file;
 }
 
-float get_lux(int fd)
+float get_lux()
 {
 	float ch_0 = 0, ch_1 = 0;
 	float adc,lux;
 
-	if(control_reg_wr(fd, 0x03) < 0) //to power up the sensor
+	if(control_reg_wr(a, 0x03) < 0) //to power up the sensor
 	{
           return -1;
         }
-        if(timing_reg_wr(fd, time_high|gain) < 0)
+        if(timing_reg_wr(a, time_high|gain) < 0)
         {
 	 return -1;
 	}
 
 	usleep(5000);
 
-	ch_0 = (float)data0_reg_rd(fd);
-	ch_1 = (float)data1_reg_rd(fd);
+	ch_0 = (float)data0_reg_rd(a);
+	ch_1 = (float)data1_reg_rd(a);
 
 	adc = ch_1/ch_0;
 

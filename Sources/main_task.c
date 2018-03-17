@@ -15,10 +15,11 @@
 #include <stdint.h>
 #include <time.h>       
 #include <mqueue.h>
-#include "light_task.h"
+#include "../Includes/light_task.h"
 #include "light_task.c"
-#include "temp_task.h"
+#include "../Includes/temp_task.h"
 #include "temp_task.c"
+#include "socket_task.c"
 
 
 typedef struct              //structure to be sent
@@ -56,8 +57,8 @@ void *func_light()
         {       
                 //time_t curtime;
                 time(&curtime);
-                float lumen = get_lux(x);
-                
+                float lumen = get_lux();
+              
                 if(lumen < 0 )
 		{
 
@@ -139,7 +140,7 @@ void *func_temp()
                         tempmsg.data = 1;
 			mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
 
-                        printf("The current temp is %f\n", temp);
+                        //printf("The current temp is %f\n", temp);
                         //tempmsg.source_id = 2;
                         tempmsg.data = 0;
                         tempmsg.value = temp;
@@ -253,11 +254,18 @@ while(1)
         return fptr;
 }
 
+
+void* func_socket()
+{
+  printf("Socket Task Started\n");
+  socket_task();
+  printf("Socket Task Finished\n");
+}
+
 int main()
 {
-   pthread_t id1; 
-   pthread_t id2;
-   pthread_t id3;
+   pthread_t logger_id, light_id, temp_id, socket_id; 
+
    time_t curtime;
    time(&curtime);
    mqd_t mq1;
@@ -268,9 +276,10 @@ int main()
            (struct threadParam*) malloc(sizeof(struct threadParam));
    struct threadParam* thread3 =
            (struct threadParam*) malloc(sizeof(struct threadParam));
-   pthread_create(&id1,NULL,logger_task,(void *)thread1);
-   pthread_create(&id2,NULL,func_light,(void *)thread2);
-   pthread_create(&id3,NULL,func_temp,(void *)thread3);
+   pthread_create(&logger_id, NULL,logger_task,(void *)thread1);
+   pthread_create(&light_id, NULL,func_light,NULL);
+   pthread_create(&temp_id, NULL,func_temp,NULL);
+   pthread_create(&socket_id, NULL, func_socket, NULL );
    //thread1 -> filename = "log.txt";
 
    mystruct sample;
@@ -299,12 +308,15 @@ int main()
         } 
     //mq_close(mq1);
    //mq_unlink("/my_queue");
-   printf("Terminating process 1\n");
+   
 
-   pthread_join(id1,NULL);
-   pthread_join(id2,NULL);
-   pthread_join(id3,NULL);
+   pthread_join(logger_id,NULL);
+   pthread_join(light_id,NULL);
+   pthread_join(temp_id,NULL);
+   pthread_join(socket_id,NULL);
    pthread_exit(NULL);
+
+   printf("Main Process Terminated\n");
   return 0;
 }
 

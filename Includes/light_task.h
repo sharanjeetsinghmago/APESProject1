@@ -28,7 +28,7 @@ int threshold_int_reg_rd(int fd, int *array);
 int id_reg_rd(int fd);
 uint16_t data0_reg_rd(int fd);
 uint16_t data1_reg_rd(int fd);
-float get_lux(int fd);
+float get_lux(	);
 int light_init(void);
 
 
