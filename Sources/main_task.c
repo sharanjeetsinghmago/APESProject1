@@ -26,11 +26,13 @@
 
 pthread_t logger_id, light_id, temp_id, socket_id; 
 
+char file_name[50];
+
 typedef struct              //structure to be sent
 {             
 char timestamp[50];     
 int source_id;
-//int Log_level;
+int log_level;
 int data;
 float value;
 char random_string[50];
@@ -124,7 +126,7 @@ void *func_light()
           time(&curtime);
           memcpy(lightmsg.timestamp,ctime(&curtime), strlen(ctime(&curtime)));
           memcpy(lightmsg.random_string,"Light task initiated",20);
-
+          lightmsg.log_level = 0;
           lightmsg.source_id = 1;
           lightmsg.data =1;
           mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);      
@@ -141,17 +143,19 @@ void *func_light()
              	memcpy(lightmsg.random_string,"Error in getting data from light task",strlen("Error in getting data from light task"));
             	memcpy(lightmsg.timestamp,ctime(&curtime),24);
              	lightmsg.source_id = 1;
+                lightmsg.log_level = 2;
              	lightmsg.data = 1;
         		  mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
               sleep(1);
          		}
             else
             {    
-        		  memcpy(lightmsg.random_string,"Light data obtained",19);
+             memcpy(lightmsg.random_string,"Light data obtained",19);
         		  memcpy(lightmsg.timestamp,ctime(&curtime),24);
               lightmsg.source_id = 1;
               lightmsg.data = 1;
-        		  mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
+	      lightmsg.log_level = 1;
+              mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
 
               //printf("The current lux is %f\n", lumen);
               memcpy(lightmsg.timestamp,ctime(&curtime), strlen(ctime(&curtime)));
@@ -175,6 +179,7 @@ void *func_light()
           memcpy(lightmsg.timestamp,ctime(&curtime),24);
           lightmsg.source_id = 2;
           lightmsg.data = 1;
+	  lightmsg.log_level=2;
         	mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
         }
 
@@ -185,6 +190,7 @@ void *func_light()
         memcpy(lightmsg.timestamp,ctime(&curtime),24);
         lightmsg.source_id = 2;
         lightmsg.data = 1;
+	lightmsg.log_level= 1;
       	mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
 
 }
@@ -276,6 +282,7 @@ void *func_temp()
                           time(&curtime);
                           memcpy(tempmsg.timestamp,ctime(&curtime),24);
                           tempmsg.source_id = 2;
+			  tempmsg.log_level = 0;
                           tempmsg.data = 1;
 			     mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
                         //memcpy(,buffer, strlen(buffer));
@@ -290,6 +297,7 @@ void *func_temp()
                           memcpy(tempmsg.timestamp,ctime(&curtime),24);
                           tempmsg.source_id = 2;
                           tempmsg.data = 1;
+			  tempmsg.log_level = 2;
                           mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
                            
                         }
@@ -298,6 +306,7 @@ void *func_temp()
 			                   memcpy(tempmsg.random_string,"Temperature data obtained",25);
 			                   memcpy(tempmsg.timestamp,ctime(&curtime),24);
                          tempmsg.source_id = 2;
+			 tempmsg.log_level = 1;
                          tempmsg.data = 1;
 			                   mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
 
@@ -325,6 +334,7 @@ void *func_temp()
         memcpy(tempmsg.timestamp,ctime(&curtime),24);
         tempmsg.source_id = 2;
         tempmsg.data = 1;
+	tempmsg.log_level = 2;
 	       mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
          exit(0);
 	   }
@@ -333,6 +343,7 @@ void *func_temp()
         memcpy(tempmsg.random_string,"Temperature task finished\n",25);
         memcpy(tempmsg.timestamp,ctime(&curtime),24);
         tempmsg.source_id = 2;
+	tempmsg.log_level = 1;
         tempmsg.data = 1;
 	       mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
         
@@ -340,24 +351,22 @@ void *func_temp()
 
 }
 
-void* logger_task(void *arg)
+void* logger_task()
 {       
-        struct threadParam *logger_thread = (struct threadParam*) arg;
-        
         FILE *fptr;
         mqd_t my_queue; 
 
-        fptr = fopen("log.txt","w");   //use logger_thread -> filename
+        fptr = fopen(file_name,"w");   //use logger_thread -> filename
         my_queue = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
         struct mq_attr *pact;
         pact = malloc(sizeof(struct mq_attr));
         mq_getattr(my_queue,pact);
-        fprintf(fptr,"Message queue initialised\n");
+        //fprintf(fptr,"Message queue initialised\n");
         printf("[Logger Thread] Message queue initialised.\n");
         fclose(fptr);
 while(1)
 {
-        fptr = fopen("log.txt","a");
+        fptr = fopen(file_name,"a");
         //my_queue = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
         mystruct given;
         //struct mq_attr *pact;
@@ -373,7 +382,7 @@ while(1)
         if(given.source_id == 0)  //for main task
         {
 
-        fprintf(fptr,"Timestamp:%s, Source ID:%d, Message from main task: %s\n",buffer,given.source_id,stringbuffer);
+        fprintf(fptr,"Timestamp:%s, Source ID:%d, Log ID:%d, Message from main task: %s\n",buffer,given.source_id,given.log_level,stringbuffer);
 
 
         }
@@ -383,13 +392,13 @@ while(1)
         if(given.data == 0)
         {
 
-        fprintf(fptr,"Timestamp:%s, Source ID:%d, Lux value: %f\n",buffer,given.source_id,given.value);
+        fprintf(fptr,"Timestamp:%s, Source ID:%d, Log ID:%d,Lux value: %f\n",buffer,given.source_id,given.log_level,given.value);
 
         }
         else if(given.data == 1)
         {
 
-        fprintf(fptr,"Timestamp:%s, Source ID:%d, Message from light task: %s\n",buffer,given.source_id,stringbuffer);
+        fprintf(fptr,"Timestamp:%s, Source ID:%d, Log ID:%d, Message from light task: %s\n",buffer,given.source_id,given.log_level,stringbuffer);
 
         }       
         }
@@ -399,18 +408,24 @@ while(1)
         if(given.data == 0)
         {
 
-        fprintf(fptr,"Timestamp:%s, Source ID:%d, Temperature value: %f\n",buffer,given.source_id,given.value);
+        fprintf(fptr,"Timestamp:%s, Source ID:%d, Log ID:%d, Temperature value: %f\n",buffer,given.source_id,given.log_level,given.value);
 
         }
         else if(given.data == 1)
         {
 
-        fprintf(fptr,"Timestamp:%s, Source ID:%d, Message from temp task: %s\n",buffer,given.source_id,stringbuffer);
+        fprintf(fptr,"Timestamp:%s, Source ID:%d, Log ID:%d, Message from temp task: %s\n",buffer,given.source_id,given.log_level,stringbuffer);
 
         }       
         }
-	       //mq_close(my_queue);
-        //mq_unlink("/my_queue");
+	
+	else if(given.source_id == 3)  //for socket task
+        {
+
+        fprintf(fptr,"Timestamp:%s, Source ID:%d, Log ID:%d, Message from socket task: %s\n",buffer,given.source_id,given.log_level,stringbuffer);
+
+       
+        }      
         fclose(fptr);
 
 }
@@ -422,6 +437,29 @@ while(1)
 void* func_socket()
 {
   printf("[Socket Thread] Socket Task Started\n");
+   time_t curtime;
+   time(&curtime);
+   mqd_t mq1;
+  mystruct sample;
+   //char buffer1[50] = {0};
+   char buffer[50] = {0};
+   //char my_stamp[25]; 
+
+   //strncpy(buffer1,,27);
+   strncpy(sample.random_string,"Socket task initiated", strlen("Socket task initiated"));
+   sample.source_id = 3;
+   sample.log_level = 0;
+   //my_stamp = ctime(&curtime);
+   memcpy(buffer,ctime(&curtime),24);
+   memcpy(sample.timestamp,buffer, strlen(buffer));  
+   
+   mq1 = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
+   
+   if( mq_send(mq1,(char *)&sample,sizeof(sample),1)== -1)
+        {
+          printf("Sending failed\n");
+        } 
+    
   socket_task();
   printf("[Socket Thread] Socket Task Finished\n");
 }
@@ -536,23 +574,19 @@ int startup_test()
 	return x;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
    
+	memset(file_name, '\0', sizeof(file_name));
+	strncpy(file_name, argv[1], strlen(argv[1]));	
 
    time_t curtime;
    time(&curtime);
    mqd_t mq1;
-
-
-
-   struct threadParam* thread1 =
-           (struct threadParam*) malloc(sizeof(struct threadParam));
-   struct threadParam* thread2 =
-           (struct threadParam*) malloc(sizeof(struct threadParam));
-   struct threadParam* thread3 =
-           (struct threadParam*) malloc(sizeof(struct threadParam));
-   pthread_create(&logger_id, NULL,logger_task,(void *)thread1);
+   mystruct sample;
+   char buffer[50] = {0};
+ 
+   pthread_create(&logger_id, NULL,logger_task,NULL);
    //pthread_create(&light_id, NULL,func_light,NULL);
    //pthread_create(&temp_id, NULL,func_temp,NULL);
    //pthread_create(&socket_id, NULL, func_socket, NULL );
@@ -562,9 +596,16 @@ int main()
 
 	if(startup_check == 0)
 	{
-		
-		printf("\n<<<Startup Test Failed>>>\n\n");
+		strncpy(sample.random_string,"Startup test failed", strlen("Startup test failed"));
+   sample.source_id = 0;
+   sample.log_level = 2;
+   //my_stamp = ctime(&curtime);
+   memcpy(buffer,ctime(&curtime),24);
+   memcpy(sample.timestamp,buffer, strlen(buffer));
+   mq1 = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
+   mq_send(mq1,(char *)&sample,sizeof(sample),1);
 
+		printf("\n<<<Startup Test Failed>>>\n\n");
 		printf("[Main Task] Killing All Tasks\n");
 		pthread_cancel(logger_id);
 		pthread_cancel(temp_id);
@@ -575,15 +616,15 @@ int main()
 		return -1;
 	}
 
-   mystruct sample;
-   char buffer1[50] = {0};
-   char buffer[50] = {0};
+   
+   //char buffer1[50] = {0};
+   //char buffer[50] = {0};
    //char my_stamp[25]; 
 
    //strncpy(buffer1,,27);
    strncpy(sample.random_string,"Initiated child threads", strlen("Initiated child threads"));
    sample.source_id = 0;
-
+   sample.log_level = 0;
    //my_stamp = ctime(&curtime);
    memcpy(buffer,ctime(&curtime),24);
    memcpy(sample.timestamp,buffer, strlen(buffer));  
