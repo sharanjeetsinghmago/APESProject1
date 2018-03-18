@@ -21,6 +21,10 @@
 #include "temp_task.c"
 #include "socket_task.c"
 
+#define HB_PORT_ADR 5000
+#define IP_ADR      "127.0.0.1"
+
+pthread_t logger_id, light_id, temp_id, socket_id; 
 
 typedef struct              //structure to be sent
 {             
@@ -37,6 +41,77 @@ struct threadParam
 char *filename;
 };
 
+int light_client()
+{
+  int client_socket = 0;
+  struct sockaddr_in serv_addr = {0};
+  const char* msg = "Light Alive";
+  payload_t ploadSend;
+  int sent_b;
+  size_t pload_size;
+  char r_data[4] = {0};
+
+  /* Enter the message into payload structure */
+  memcpy(ploadSend.buf,msg,strlen(msg)+1);
+  ploadSend.buf_len = strlen(ploadSend.buf);
+  ploadSend.usrLED_OnOff = 1;
+
+  /* create socket */
+  if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+  {
+    //printf("[Client] [ERROR] Socket creation Error\n");
+    return -1;
+  }
+  else
+    //printf("[Client] Socket Created Successfully\n");
+
+  /* Fill the socket address structure */
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(HB_PORT_ADR);
+      
+  /* convert the IP ADDR to proper format */
+  if(inet_pton(AF_INET, IP_ADR, &serv_addr.sin_addr)<=0) 
+  {
+    //printf("[Client] [ERROR] Address Conversion Error\n");
+    return -1;
+  }
+  
+  /* connect the socket before sending the data */
+  if (connect(client_socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+  {
+    //printf("[Client] [ERROR] Connection Failed \n");
+    return -1;
+  }
+
+  /*send the size of the incoming payload */
+  pload_size = sizeof(ploadSend);
+  sent_b = send(client_socket,&pload_size,sizeof(size_t), 0);
+  //printf("[Client] Sent payload size: %d\n", pload_size);
+
+  /*Sending the payload */
+  sent_b = send(client_socket , (char*)&ploadSend , sizeof(ploadSend), 0 );
+  /* check whether all the bytes are sent or not */
+  if(sent_b < sizeof(ploadSend))
+  {
+    //printf("[Client] [ERROR] Complete data not sent\n");
+    return 1;
+  }
+  
+  /* display the date sent */
+  //printf("[Client] Message sent from Client\n{\n Message: %s\n MessageLen: %d\n USRLED: %d\n}\n", \
+                           ploadSend.buf, ploadSend.buf_len, ploadSend.usrLED_OnOff);
+  
+  /* read data sent by server */
+  //read(client_socket, r_data, 4);
+  //printf("[Client]  Message received from Server: %s\n",r_data);
+
+  /* close socket */ 
+  close(client_socket);
+  
+  //return 0;
+
+}
+
 void *func_light()
 {       mqd_t mq1;
         printf("[Light Thread] Light Thread Started\n");
@@ -45,72 +120,147 @@ void *func_light()
         int x = light_init();
         if(x != -1)
         {
-                mq1 = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
-                time(&curtime); 
-                memcpy(lightmsg.timestamp,ctime(&curtime), strlen(ctime(&curtime)));
-                memcpy(lightmsg.random_string,"Light task initiated",20);
+          mq1 = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
+          time(&curtime);
+          memcpy(lightmsg.timestamp,ctime(&curtime), strlen(ctime(&curtime)));
+          memcpy(lightmsg.random_string,"Light task initiated",20);
 
-                lightmsg.source_id = 1;
-                lightmsg.data =1;
-                mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);      
-	while(1)
-        {       
-                //time_t curtime;
-                time(&curtime);
-                float lumen = get_lux();
-              
-                if(lumen < 0 )
-		{
+          lightmsg.source_id = 1;
+          lightmsg.data =1;
+          mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);      
+	        while(1)
+          {   
+            //time_t curtime;
+            time(&curtime);
+            float lumen = get_lux();
+                   
+            if(lumen < 0 )
+        		{
 
- 		time(&curtime);
-          	memcpy(lightmsg.random_string,"Error in getting data from light task",strlen("Error in getting data from light task"));
-       		memcpy(lightmsg.timestamp,ctime(&curtime),24);
-        	lightmsg.source_id = 1;
-        	lightmsg.data = 1;
-		mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
-                sleep(1);
- 		}
-                else{    
-		memcpy(lightmsg.random_string,"Light data obtained",19);
-		memcpy(lightmsg.timestamp,ctime(&curtime),24);
-                lightmsg.source_id = 1;
-                lightmsg.data = 1;
-		mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
+         	  	time(&curtime);
+             	memcpy(lightmsg.random_string,"Error in getting data from light task",strlen("Error in getting data from light task"));
+            	memcpy(lightmsg.timestamp,ctime(&curtime),24);
+             	lightmsg.source_id = 1;
+             	lightmsg.data = 1;
+        		  mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
+              sleep(1);
+         		}
+            else
+            {    
+        		  memcpy(lightmsg.random_string,"Light data obtained",19);
+        		  memcpy(lightmsg.timestamp,ctime(&curtime),24);
+              lightmsg.source_id = 1;
+              lightmsg.data = 1;
+        		  mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
 
-                //printf("The current lux is %f\n", lumen);
-                memcpy(lightmsg.timestamp,ctime(&curtime), strlen(ctime(&curtime)));
-                lightmsg.data = 0;
-                lightmsg.value = lumen; 
-                if( mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1)== -1)
-                 {
-          printf("Sending failed\n");
-                 } 
-          sleep(1);
-        }
-        }
-	}
+              //printf("The current lux is %f\n", lumen);
+              memcpy(lightmsg.timestamp,ctime(&curtime), strlen(ctime(&curtime)));
+              lightmsg.data = 0;
+              lightmsg.value = lumen; 
+              if( mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1)== -1)
+              {
+                printf("Sending failed\n");
+              } 
+              sleep(1);
+              light_client();
+            //exit(0);
+            }
+          }
+        }	
         else 
         {
-        time(&curtime);
-        memcpy(lightmsg.random_string,"Error in initialising light task",strlen("Error in initialising light task"));
-        memcpy(lightmsg.timestamp,ctime(&curtime),24);
-        lightmsg.source_id = 2;
-        lightmsg.data = 1;
-	mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
+          printf("[Light Thread] Error initialising light task\n");
+          time(&curtime);
+          memcpy(lightmsg.random_string,"Error in initialising light task",strlen("Error in initialising light task"));
+          memcpy(lightmsg.timestamp,ctime(&curtime),24);
+          lightmsg.source_id = 2;
+          lightmsg.data = 1;
+        	mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
         }
 
 
         printf("[Light Thread] Light Thread Finished\n");
-	time(&curtime);
+	      time(&curtime);
         memcpy(lightmsg.random_string,"Light task finished",19);
         memcpy(lightmsg.timestamp,ctime(&curtime),24);
         lightmsg.source_id = 2;
         lightmsg.data = 1;
-	mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
+      	mq_send(mq1,(char *)&lightmsg,sizeof(lightmsg),1);
 
 }
 
 
+
+int temp_client()
+{
+  int client_socket = 0;
+  struct sockaddr_in serv_addr = {0};
+  const char* msg = "Temp Alive";
+  payload_t ploadSend;
+  int sent_b;
+  size_t pload_size;
+  char r_data[4] = {0};
+
+  /* Enter the message into payload structure */
+  memcpy(ploadSend.buf,msg,strlen(msg)+1);
+  ploadSend.buf_len = strlen(ploadSend.buf);
+  ploadSend.usrLED_OnOff = 1;
+
+  /* create socket */
+  if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+  {
+    //printf("[Client] [ERROR] Socket creation Error\n");
+    return -1;
+  }
+  else
+    //printf("[Client] Socket Created Successfully\n");
+
+  /* Fill the socket address structure */
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(HB_PORT_ADR);
+      
+  /* convert the IP ADDR to proper format */
+  if(inet_pton(AF_INET, IP_ADR, &serv_addr.sin_addr)<=0) 
+  {
+    //printf("[Client] [ERROR] Address Conversion Error\n");
+    return -1;
+  }
+  
+  /* connect the socket before sending the data */
+  if (connect(client_socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+  {
+    //printf("[Client] [ERROR] Connection Failed \n");
+    return -1;
+  }
+
+  /*send the size of the incoming payload */
+  pload_size = sizeof(ploadSend);
+  sent_b = send(client_socket,&pload_size,sizeof(size_t), 0);
+  //printf("[Client] Sent payload size: %d\n", pload_size);
+
+  /*Sending the payload */
+  sent_b = send(client_socket , (char*)&ploadSend , sizeof(ploadSend), 0 );
+  /* check whether all the bytes are sent or not */
+  if(sent_b < sizeof(ploadSend))
+  {
+    //printf("[Client] [ERROR] Complete data not sent\n");
+    return 1;
+  }
+  
+  /* display the date sent */
+  //printf("[Client] Message sent from Client\n{\n Message: %s\n MessageLen: %d\n USRLED: %d\n}\n", \
+                           ploadSend.buf, ploadSend.buf_len, ploadSend.usrLED_OnOff);
+  
+  /* read data sent by server */
+  //read(client_socket, r_data, 4);
+  //printf("[Client]  Message received from Server: %s\n",r_data);
+
+  /* close socket */ 
+  close(client_socket);
+  
+  //return 0;
+
+}
 
 void *func_temp()
 {
@@ -120,57 +270,71 @@ void *func_temp()
         time_t curtime;
         char buffer[50] = {0};
         if(temp_init() != -1)
-		{
-                //get_temp();
-                        mq1 = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
-                        memcpy(tempmsg.random_string,"Temperature task initiated",26);
-                        time(&curtime);
-                        memcpy(tempmsg.timestamp,ctime(&curtime),24);
-                        tempmsg.source_id = 2;
-                        tempmsg.data = 1;
-			mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
+		    {
+                          mq1 = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
+                          memcpy(tempmsg.random_string,"Temperature task initiated",26);
+                          time(&curtime);
+                          memcpy(tempmsg.timestamp,ctime(&curtime),24);
+                          tempmsg.source_id = 2;
+                          tempmsg.data = 1;
+			     mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
                         //memcpy(,buffer, strlen(buffer));
-		while(1)
+		      while(1)
                 {
                         time(&curtime);
                         float temp = read_temp_data_reg(0);
-			memcpy(tempmsg.random_string,"Temperature data obtained",25);
-			memcpy(tempmsg.timestamp,ctime(&curtime),24);
-                        tempmsg.source_id = 2;
-                        tempmsg.data = 1;
-			mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
-
-                        //printf("The current temp is %f\n", temp);
-                        //tempmsg.source_id = 2;
-                        tempmsg.data = 0;
-                        tempmsg.value = temp;
-                        time(&curtime);
-                        memcpy(tempmsg.timestamp,ctime(&curtime),24); 
-                        if( mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1)== -1)
+                        if(temp == -300)
                         {
-                        printf("Sending failed\n");
+                          time(&curtime);
+                          memcpy(tempmsg.random_string,"Error in getting data from Temperature task",strlen("Error in getting data from Temperature task"));
+                          memcpy(tempmsg.timestamp,ctime(&curtime),24);
+                          tempmsg.source_id = 2;
+                          tempmsg.data = 1;
+                          mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
+                           
+                        }
+                        else
+                        {
+			                   memcpy(tempmsg.random_string,"Temperature data obtained",25);
+			                   memcpy(tempmsg.timestamp,ctime(&curtime),24);
+                         tempmsg.source_id = 2;
+                         tempmsg.data = 1;
+			                   mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
+
+                          //printf("The current temp is %f\n", temp);
+                          //tempmsg.source_id = 2;
+                          tempmsg.data = 0;
+                          tempmsg.value = temp;
+                          time(&curtime);
+                          memcpy(tempmsg.timestamp,ctime(&curtime),24); 
+                          if( mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1)== -1)
+                          {
+                            printf("Sending failed\n");
+                          }
+                          temp_client();
                         } 
                         sleep(1);
 
                 }
-		}
-        else
-	{
-        printf("Error initialising temperature task");
+		  }
+      else
+	   {
+        printf("[Temperature Thread] Error initialising temperature task\n");
         time(&curtime);
         memcpy(tempmsg.random_string,"Error in initialising temperature task",strlen("Error in initialising temperature task"));
         memcpy(tempmsg.timestamp,ctime(&curtime),24);
         tempmsg.source_id = 2;
         tempmsg.data = 1;
-	mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
-	}
+	       mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
+         exit(0);
+	   }
 
         time(&curtime);
-        memcpy(tempmsg.random_string,"Temperature task finished",25);
+        memcpy(tempmsg.random_string,"Temperature task finished\n",25);
         memcpy(tempmsg.timestamp,ctime(&curtime),24);
         tempmsg.source_id = 2;
         tempmsg.data = 1;
-	mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
+	       mq_send(mq1,(char *)&tempmsg,sizeof(tempmsg),1);
         
         printf("[Temperature Thread] Temperature Thread Finished\n");
 
@@ -262,13 +426,125 @@ void* func_socket()
   printf("[Socket Thread] Socket Task Finished\n");
 }
 
+int check_status()
+{
+  struct sockaddr_in addr, peer_addr;
+  int addr_len = sizeof(peer_addr);
+  char rdbuff[1024] = {0};
+  int server_socket, accepted_soc, opt = 1;
+  int i = 0;
+  payload_t *ploadptr;
+  int read_b;
+  size_t pload_len = 0;
+
+  /* create socket */
+  if((server_socket = socket(AF_INET,SOCK_STREAM,0)) == 0)
+  {
+    printf("[HBServer] [ERROR] Socket Creation Error\n");
+    return 1;
+  }
+  else
+    printf("[HBServer] Socket Created Successfully\n");
+
+  /* set socket options */
+  if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &(opt), sizeof(opt)))
+  {
+    printf("[HBServer] [ERROR] Socket options set error\n");
+    return 1;
+  }
+
+  /*Set the sockaddr_in structure */
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = INADDR_ANY;  
+  addr.sin_port = htons(HB_PORT_ADR);
+
+  /*bind socket to a address */
+  if((bind(server_socket,(struct sockaddr*)&addr, sizeof(addr))) < 0)
+  {
+    printf("[HBServer] [ERROR] Bind socket Error\n");
+    return 1;
+  }
+  else
+    printf("[HBServer] Socket binded Successfully\n");
+
+  /* listen for connections*/
+  if(listen(server_socket,5) < 0)
+  {
+    printf("[HBServer] [ERROR] Can't listen connection\n");
+    return 1;
+  }
+while(1)
+{
+  /*accept connection */
+  accepted_soc = accept(server_socket, (struct sockaddr*)&peer_addr,(socklen_t*)&addr_len);
+  if(accepted_soc < 0)
+  {
+    printf("[HBServer] [ERROR] Can't accept connection\n");
+    return 1;
+  }
+
+  // read payload length 
+  read_b = read(accepted_soc, &pload_len, sizeof(size_t));
+  if(read_b == sizeof(size_t))
+  {
+    //printf("[HBServer] Size of incoming payload: %d\n",pload_len);
+  } 
+  else
+  {
+    //printf("[HBServer] [ERROR] Invalid data\n");
+    return 1;
+  } 
+
+  // read payload 
+  while((read_b = read(accepted_soc, rdbuff+i, 1024)) < pload_len)
+  {
+    i+=read_b;  
+  }
+  ploadptr= (payload_t*)rdbuff;
+  /* display data */
+  printf("[HBServer]  Message: %s\n",ploadptr->buf);
+  
+  // send message from server to client 
+  //send(accepted_soc , "ACK" , 4, 0);
+  //printf("[HBServer] Message sent from Server: ACK\n");
+}
+  /*close socket */
+  close(accepted_soc);
+
+  return 0;
+}
+
+
+int startup_test()
+{
+	int x=1;
+	
+	if(temp_init() == -1)
+		x=0;
+
+	if(light_init() == -1)
+		x=0;
+
+	if(pthread_create(&light_id, NULL,func_light,NULL) != 0)
+		x=0;
+   	if(pthread_create(&temp_id, NULL,func_temp,NULL) != 0)
+   		x=0;
+   	
+   	if(pthread_create(&socket_id, NULL, func_socket, NULL ) !=0)
+   		x=0;
+
+	return x;
+}
+
 int main()
 {
-   pthread_t logger_id, light_id, temp_id, socket_id; 
+   
 
    time_t curtime;
    time(&curtime);
    mqd_t mq1;
+
+
 
    struct threadParam* thread1 =
            (struct threadParam*) malloc(sizeof(struct threadParam));
@@ -277,10 +553,27 @@ int main()
    struct threadParam* thread3 =
            (struct threadParam*) malloc(sizeof(struct threadParam));
    pthread_create(&logger_id, NULL,logger_task,(void *)thread1);
-   pthread_create(&light_id, NULL,func_light,NULL);
-   pthread_create(&temp_id, NULL,func_temp,NULL);
-   pthread_create(&socket_id, NULL, func_socket, NULL );
+   //pthread_create(&light_id, NULL,func_light,NULL);
+   //pthread_create(&temp_id, NULL,func_temp,NULL);
+   //pthread_create(&socket_id, NULL, func_socket, NULL );
    //thread1 -> filename = "log.txt";
+
+	int startup_check = startup_test();
+
+	if(startup_check == 0)
+	{
+		
+		printf("\n<<<Startup Test Failed>>>\n\n");
+
+		printf("[Main Task] Killing All Tasks\n");
+		pthread_cancel(logger_id);
+		pthread_cancel(temp_id);
+		pthread_cancel(light_id);
+		pthread_cancel(socket_id);	
+		mq_close(mq1);
+   		mq_unlink("/my_queue");
+		return -1;
+	}
 
    mystruct sample;
    char buffer1[50] = {0};
@@ -309,6 +602,11 @@ int main()
     //mq_close(mq1);
    //mq_unlink("/my_queue");
    
+
+
+
+
+   check_status();
 
    pthread_join(logger_id,NULL);
    pthread_join(light_id,NULL);

@@ -13,7 +13,7 @@
 typedef struct
 {
   char    buf[20];
-  size_t  buf_len;
+  int  buf_len;
   bool    usrLED_OnOff;
 }payload_t;
 
@@ -27,7 +27,7 @@ int socket_task()
   int i = 0;
   payload_t *ploadptr;
   int read_b;
-  size_t pload_len = 0;
+  int pload_len = 0;
   char ackbuf[50];
   float temp,lumen;
 
@@ -81,8 +81,8 @@ while(1)
   }
 
   /* read payload length */
-  read_b = read(accepted_soc, &pload_len, sizeof(size_t));
-  if(read_b == sizeof(size_t))
+  read_b = read(accepted_soc, &pload_len, sizeof(int));
+  if(read_b == sizeof(int))
   {
     printf("[Server] Size of incoming payload: %d\n",pload_len);
   }	
@@ -99,8 +99,7 @@ while(1)
   }
   ploadptr= (payload_t*)rdbuff;
   /* display data */
-  printf("[Server] Message Recvd from Client\n{\n Message:%s\n MessageLen:%d\n USRLED:%d\n}\n", \ 
-                                        ploadptr->buf, ploadptr->buf_len, ploadptr->usrLED_OnOff);
+  printf("[Server] Message Recvd from Client\n{\n Message:%s\n MessageLen:%d\n USRLED:%d\n}\n",ploadptr->buf, ploadptr->buf_len, ploadptr->usrLED_OnOff);
   
   if(strcmp(ploadptr->buf,"get_temp_celcius")==0)
   {
