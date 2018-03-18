@@ -161,6 +161,7 @@ float read_temp_data_reg(int unit)
     /* ERROR HANDLING: i2c transaction failed */
     perror("Failed to read from the i2c bus.\n");
     printf("ERROR : %s\n", strerror(errno));
+    return -300;
   }
   else 
   {
