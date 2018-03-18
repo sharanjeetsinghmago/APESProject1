@@ -27,8 +27,8 @@ typedef enum
   TEMP_FAH = 2
 }temp_format;
 
-int default_config_byte_one = 0X50;
-int default_config_byte_two = 0XA0;
+int default_config_byte_one = 0x50;
+int default_config_byte_two = 0xA0;
 
 void write_pointer_reg(uint8_t value)
 {
@@ -38,18 +38,20 @@ void write_pointer_reg(uint8_t value)
   }
 }
 
-void write_tlow_reg(int reg, uint16_t value )
+int write_tlow_reg(int reg, uint16_t value )
 {  
   write_pointer_reg(reg);
   
   if (write(fd, &value, 2) != 2) 
   {
     perror("T-low register write error");
+    return -1;
   }
+  return 0;
 }
 
 
-void write_config_reg_on_off(uint8_t value )
+int write_config_reg_on_off(uint8_t value )
 {
   write_pointer_reg(0b00000001);
   if((value == 0) || (value == 1))
@@ -59,16 +61,19 @@ void write_config_reg_on_off(uint8_t value )
     if (write(fd, &default_config_byte_one, 1) != 1) 
     {
       perror("Configuration register write error for first byte");
+	return -1;
     }
     
     if (write(fd, &default_config_byte_two, 1) != 1) 
     {
       perror("Configuration register write error for second byte");
+	return -1;
     }
   }
+return 0;
 }
 
-void write_config_reg_em(uint8_t value )
+int write_config_reg_em(uint8_t value )
 { 
   write_pointer_reg(0b00000001);
   if((value == 0) || (value == 1))
@@ -78,16 +83,19 @@ void write_config_reg_em(uint8_t value )
     if (write(fd, &default_config_byte_one, 1) != 1) 
     {
       perror("Configuration register write error for first byte");
+	return -1;
     }
     
     if (write(fd, &default_config_byte_two, 1) != 1) 
     {
       perror("Configuration register write error for second byte");
+	return -1;
     }
   }
+return 0;
 }
 
-void write_config_reg_conv_rate(uint8_t value )
+int write_config_reg_conv_rate(uint8_t value )
 {
   write_pointer_reg(0b00000001);
   if((value >= 0) || (value <= 3))
@@ -96,25 +104,31 @@ void write_config_reg_conv_rate(uint8_t value )
     if (write(fd, &default_config_byte_one, 1) != 1) 
     {
       perror("Configuration register write error for first byte");
+	return -1;
     }
     if (write(fd, &default_config_byte_two, 1) != 1) 
     {
       perror("Configuration register write error for second byte");
+	return -1;
     }
   }
+return 0;
 }
 
-void write_config_register_default( )
+int write_config_register_default( )
 {  
   write_pointer_reg(0b00000001);
   if (write(fd, &default_config_byte_one, 1) != 1) 
   {
     perror("Configuration register write error for first byte");
+	return -1;
   } 
   if (write(fd, &default_config_byte_two, 1) != 1) 
   {
     perror("Configuration register write error for second byte");
+	return -1;
   }
+return 0;
 }
 
 
@@ -127,9 +141,10 @@ uint16_t read_tlow_reg(int reg)
   if (read(fd, v, 1) != 1) 
   {
     perror("T-low register read error");
+    return -1;
   }
   value = (v[0]<<4 | (v[1] >> 4 & 0XF));
-  printf("T-low register value is: %f \n", value);
+  printf("T-low register value is: %d \n", value);
   return value; 
 }
 
@@ -141,10 +156,52 @@ uint16_t read_temp_config_register()
   if (read(fd, v, 1) != 1) 
   {
     perror("Temperature configuration register read error");
+    return -1;
   }
   value = (v[0]<<8 | v[1]);
-  printf("Temperature configuration register value is: %f \n", value);
+  printf("Temperature configuration register value is: %d \n", value);
   return value;
+}
+
+int all_temprg_rd_wr()
+{
+if (write_config_reg_on_off(1) < 0)
+{
+return -1;
+} 
+
+if (write_config_reg_em(1) < 0)
+{
+return -1;
+}
+
+if (read_temp_config_register() < 0)
+{
+return -1;
+}
+
+if (write_config_register_default() < 0)
+{
+return -1;
+}
+
+if (write_config_reg_conv_rate(2) < 0)
+{
+return -1;
+}
+
+if (write_tlow_reg(0x02,45) < 0)
+{
+return -1;
+}
+
+if (read_tlow_reg(0x02) < 0)
+{
+return -1;
+}
+
+return 0;
+
 }
 
 float read_temp_data_reg(int unit)
@@ -204,3 +261,6 @@ int temp_init()
 
   return 0;
 }
+
+
+
