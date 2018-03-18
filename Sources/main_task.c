@@ -43,6 +43,26 @@ struct threadParam
 char *filename;
 };
 
+void func_led_off()
+{
+	FILE *LED1 = NULL;
+	char *LED2 = "/sys/class/leds/beaglebone:green:usr2/brightness";
+
+	LED1 = fopen(LED2, "r+");
+	fwrite("0", sizeof(char), 1, LED1);
+	fclose(LED1);
+}
+
+void func_led_on()
+{
+	FILE *LED1 = NULL;
+	char *LED2 = "/sys/class/leds/beaglebone:green:usr2/brightness";
+
+	LED1 = fopen(LED2, "r+");
+	fwrite("1", sizeof(char), 1, LED1);
+	fclose(LED1);
+}
+
 int light_client()
 {
   int client_socket = 0;
@@ -605,6 +625,7 @@ int main(int argc, char *argv[])
    mq1 = mq_open("/my_queue",O_RDWR | O_CREAT, 0666, NULL);
    mq_send(mq1,(char *)&sample,sizeof(sample),1);
 
+   		func_led_off();
 		printf("\n<<<Startup Test Failed>>>\n\n");
 		printf("[Main Task] Killing All Tasks\n");
 		pthread_cancel(logger_id);
