@@ -1,0 +1,2 @@
+Timestamp:Sat Mar 17 23:33:35 2018, Source ID:0, Log ID:2, Message from main task: Startup test failed
+Timestamp:Sat Mar 17 23:33:35 2018, Source ID:3, Log ID:0, Message from socket task: Socket task initiated

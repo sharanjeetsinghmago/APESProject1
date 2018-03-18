@@ -1,0 +1,37 @@
+Timestamp:Sat Mar 17 20:33:13 2018, Source ID:0, Log ID:0, Message from main task: Initiated child threads
+Timestamp:Sat Mar 17 20:33:13 2018, Source ID:3, Log ID:0, Message from socket task: Socket task initiated
+Timestamp:Sat Mar 17 20:33:13 2018, Source ID:1, Log ID:0, Message from light task: Light task initiated
+Timestamp:Sat Mar 17 20:33:13 2018, Source ID:2, Log ID:0, Message from temp task: Temperature task initiated
+Timestamp:Sat Mar 17 20:33:13 2018, Source ID:2, Log ID:1, Message from temp task: Temperature data obtainedd
+Timestamp:Sat Mar 17 20:33:13 2018, Source ID:2, Log ID:1, Temperature value: 24.562500
+Timestamp:Sat Mar 17 20:33:13 2018, Source ID:1, Log ID:1, Message from light task: Light data obtainedd
+Timestamp:Sat Mar 17 20:33:13 2018, Source ID:1, Log ID:1,Lux value: 17.202063
+Timestamp:Sat Mar 17 20:33:14 2018, Source ID:2, Log ID:1, Message from temp task: Temperature data obtainedd
+Timestamp:Sat Mar 17 20:33:14 2018, Source ID:2, Log ID:1, Temperature value: 24.562500
+Timestamp:Sat Mar 17 20:33:14 2018, Source ID:1, Log ID:1, Message from light task: Light data obtainedd
+Timestamp:Sat Mar 17 20:33:14 2018, Source ID:1, Log ID:1,Lux value: 17.244602
+Timestamp:Sat Mar 17 20:33:15 2018, Source ID:2, Log ID:1, Message from temp task: Temperature data obtainedd
+Timestamp:Sat Mar 17 20:33:15 2018, Source ID:2, Log ID:1, Temperature value: 24.562500
+Timestamp:Sat Mar 17 20:33:15 2018, Source ID:1, Log ID:1, Message from light task: Light data obtainedd
+Timestamp:Sat Mar 17 20:33:15 2018, Source ID:1, Log ID:1,Lux value: 17.244602
+Timestamp:Sat Mar 17 20:33:16 2018, Source ID:2, Log ID:1, Message from temp task: Temperature data obtainedd
+Timestamp:Sat Mar 17 20:33:16 2018, Source ID:2, Log ID:1, Temperature value: 24.562500
+Timestamp:Sat Mar 17 20:33:16 2018, Source ID:1, Log ID:1, Message from light task: Light data obtainedd
+Timestamp:Sat Mar 17 20:33:16 2018, Source ID:1, Log ID:1,Lux value: 17.244602
+Timestamp:Sat Mar 17 20:33:17 2018, Source ID:2, Log ID:1, Message from temp task: Temperature data obtainedd
+Timestamp:Sat Mar 17 20:33:17 2018, Source ID:2, Log ID:1, Temperature value: 24.562500
+Timestamp:Sat Mar 17 20:33:17 2018, Source ID:1, Log ID:1, Message from light task: Light data obtainedd
+Timestamp:Sat Mar 17 20:33:17 2018, Source ID:1, Log ID:1,Lux value: 17.212168
+Timestamp:Sat Mar 17 20:33:18 2018, Source ID:2, Log ID:1, Message from temp task: Temperature data obtainedd
+Timestamp:Sat Mar 17 20:33:18 2018, Source ID:2, Log ID:1, Temperature value: 24.562500
+Timestamp:Sat Mar 17 20:33:18 2018, Source ID:1, Log ID:1, Message from light task: Light data obtainedd
+Timestamp:Sat Mar 17 20:33:18 2018, Source ID:1, Log ID:1,Lux value: 17.244602
+Timestamp:Sat Mar 17 20:33:19 2018, Source ID:2, Log ID:1, Message from temp task: Temperature data obtainedd
+Timestamp:Sat Mar 17 20:33:19 2018, Source ID:2, Log ID:1, Temperature value: 24.562500
+Timestamp:Sat Mar 17 20:33:19 2018, Source ID:1, Log ID:1, Message from light task: Light data obtainedd
+Timestamp:Sat Mar 17 20:33:19 2018, Source ID:1, Log ID:1,Lux value: 17.244602
+Timestamp:Sat Mar 17 20:33:20 2018, Source ID:2, Log ID:1, Message from temp task: Temperature data obtainedd
+Timestamp:Sat Mar 17 20:33:20 2018, Source ID:2, Log ID:1, Temperature value: 24.562500
+Timestamp:Sat Mar 17 20:33:20 2018, Source ID:1, Log ID:1, Message from light task: Light data obtainedd
+Timestamp:Sat Mar 17 20:33:20 2018, Source ID:1, Log ID:1,Lux value: 17.212168
+

@@ -12,7 +12,6 @@
 
 #ifndef __MAIN_TASK_H__
 #define __MAIN_TASK_H__
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -30,24 +29,27 @@
 #include <stdint.h>
 #include <time.h>       
 #include <mqueue.h>
-#include "../Includes/light_task.h"
-#include "light_task.c"
-#include "../Includes/temp_task.h"
-#include "temp_task.c"
-#include "socket_task.c"
+#include "light_task.h"
+//#include "light_task.c"
+#include "temp_task.h"
+//#include "temp_task.c"
+#include "socket_task.h"
 
 #define HB_PORT_ADR 5000
 #define IP_ADR      "127.0.0.1"
 
 pthread_t logger_id, light_id, temp_id, socket_id; 
 
+char file_name[50];
+
 typedef struct              //structure to be sent
 {             
-	char timestamp[50];     
-	int source_id;
-	int data;
-	float value;
-	char random_string[50];
+char timestamp[50];     
+int source_id;
+int log_level;
+int data;
+float value;
+char random_string[50];
 }mystruct;
 
 struct threadParam
